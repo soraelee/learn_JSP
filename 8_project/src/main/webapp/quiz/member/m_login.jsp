@@ -18,7 +18,7 @@
 			</form>
 		</c:when>
 		<c:otherwise>
-			<hr>${ loginName }님 로그인 상태 입니다<br>
+			${ loginName }님 로그인 상태 입니다<br>
 			<a href="${ path }member/m_logout.jsp">로그아웃</a>
 		</c:otherwise>
 	</c:choose>

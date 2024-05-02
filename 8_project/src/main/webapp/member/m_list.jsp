@@ -16,8 +16,9 @@
 				<th>주소</th>
 				<th>전화번호</th>
 			</tr>
-			<c:set var="list" value="${dao.getList() }"/>
-			<c:forEach var = "dto" items="${dao.getList() }">
+			<c:set var="rsMap" value="${dao.getList( param.page ) }"/>
+			<c:forEach var = "dto" items="${rsMap.get('list') }">
+			<!-- map 형식이 돌아옴 -->
 			
 			<tr>
 				<td> 
@@ -34,6 +35,13 @@
 				<td> ${dto.tel}</td>
 			</tr>
 			</c:forEach>
+			<tr>
+				<td align="center" colspan="3">
+					<c:forEach var="cnt" begin="1" end="${rsMap.get('endPage') }">
+						<a href="m_list.jsp?page=${cnt }">${cnt }</a> &nbsp;
+					</c:forEach>
+				</td>
+			</tr>
 		</table>
 	</jsp:useBean>
 

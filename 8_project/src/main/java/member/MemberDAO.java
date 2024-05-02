@@ -5,6 +5,7 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 public class MemberDAO {
 	String url = "jdbc:oracle:thin:@localhost:1521/xe";
@@ -45,8 +46,49 @@ public class MemberDAO {
 		}
 				return dto;
 	}
-	public ArrayList<MemberDTO> getList() {
-		String sql = "select * from mem_jsp";
+	private int getTotalCount() {
+		String sql = "select count(*) from mem_jsp";
+		int tCnt = 0;
+		try {
+			con = DriverManager.getConnection(url, user, pwd);
+			ps = con.prepareStatement(sql);
+			rs = ps.executeQuery();
+			if(rs.next()) {
+				tCnt = rs.getInt("COUNT(*)");
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return tCnt;
+	}
+	private HashMap<String, Object> getOperation(int page, int tCnt) {
+		HashMap<String, Object> rsMap = new HashMap<>();
+		if(page == 0) page=1;
+
+		int pageNum = 2 ;
+		int endPage = tCnt / pageNum + (tCnt % pageNum == 0 ? 0 : 1);
+		//나머지가 있으면 현재 페이지 + 1
+		int startNum = (page-1) * pageNum + 1;
+		int endNum = pageNum * page;
+		
+		//rsMap에 각각 값을 넣어서 key value 형식으로 보냄
+		rsMap.put("endPage", endPage);
+		rsMap.put("startNum", startNum);
+		rsMap.put("endNum", endNum);
+		
+		return rsMap;
+	}
+	
+	public HashMap<String, Object> getList(int page) {
+		System.out.println("page : " + page);
+		int tCnt = getTotalCount();
+		System.out.println("tCnt : " + tCnt);
+		
+		HashMap<String, Object> rsMap = getOperation(page, tCnt);
+		
+//		String sql = "select * from mem_jsp";
+		String sql = "select A.* from(select rownum rn, id, pwd, name, addr, tel from mem_jsp)"
+						+ " A where rn between ? and ?";
 		MemberDTO dto = null;
 		
 		ArrayList<MemberDTO> list = new ArrayList<>();
@@ -54,6 +96,8 @@ public class MemberDAO {
 		try {
 			con = DriverManager.getConnection(url, user, pwd);
 			ps = con.prepareStatement(sql);
+			ps.setInt(1, (int)rsMap.get("startNum"));
+			ps.setInt(2, (int)rsMap.get("endNum"));
 			rs = ps.executeQuery();
 			while(rs.next()) {
 				dto = new MemberDTO();
@@ -72,11 +116,12 @@ public class MemberDAO {
 				if(ps != null)ps.close();
 				if(con != null)rs.close();
 				
-			} catch (Exception e2) {
-				// TODO: handle exception
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
 		}
-		return list;
+		rsMap.put("list", list);
+		return rsMap;
 	}
 	public int register(MemberDTO dto) {
 		int result = 0 ; 
